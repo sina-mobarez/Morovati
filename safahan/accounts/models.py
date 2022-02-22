@@ -1,3 +1,4 @@
+from multiprocessing import Condition
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractUser
 from django.core.validators import RegexValidator
@@ -46,6 +47,8 @@ class CustomUser(AbstractUser):
     phone = models.CharField('Phone number',validators =[phone_regex], max_length=14, unique=True,null=True)
     is_verified = models.BooleanField('verified', default=False, help_text='Designates whether this user has verified phone')
     key = models.CharField(max_length=100, unique=True, blank=True)
+    mac_address = models.CharField("a unique address of every device", max_length=120)
+    last_name = models.CharField("family name", max_length=32)
     USERNAME_FIELD = 'phone'
 
 
@@ -88,3 +91,46 @@ class  Permium(models.Model):
 
     def __str__(self):
         return f'{self.user.username} , {self.status}'
+    
+    
+    
+    
+class Filter(models.Model):
+    name = models.CharField("name of filter", max_length=50)
+    description = models.TextField("a full description for filter")
+    price = models.PositiveIntegerField("price of a filter")
+    user = models.ForeignKey(CustomUser, verbose_name="user", on_delete=models.CASCADE)
+    rank = models.CharField("rank of filter", max_length=3, null=True, blank=True)
+    
+    
+    def save(self, *args, **kwargs):
+        if not self.rank:
+            self.rank = Rank.objects.filter(filter= self)
+        super().save(*args, **kwargs)
+        
+    def __str__(self):
+        return f'{self.user.name} , {self.user}'
+    
+    
+
+
+class Conditions(models.Model):
+    type = models.IntegerField("")
+    value = models.CharField("value of type", max_length=150)
+    filter = models.ForeignKey(Filter, verbose_name="belong to a filter", on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return f'{self.user.type} , {self.filter}'    
+    
+    
+    
+    
+class Rank(models.Model):
+    rate = models.PositiveIntegerField("its must from 0 to 5")
+    user = models.ForeignKey(CustomUser, verbose_name="what user give this rate", on_delete=models.CASCADE)
+    filter = models.ForeignKey(Filter, verbose_name="belong to a filter", on_delete=models.CASCADE, related_name='ranks')
+    
+    def __str__(self):
+        return f'{self.user.rate} , {self.user}'    
+
+    

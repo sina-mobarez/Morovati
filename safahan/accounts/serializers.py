@@ -1,8 +1,9 @@
+from dataclasses import field
+from multiprocessing import Condition
 from rest_framework import serializers
 
-from accounts.models import Permium, CustomUser
+from accounts.models import Conditions, Filter, Permium, CustomUser, Rank
 from django.contrib.auth.password_validation import validate_password
-from rest_framework.validators import UniqueValidator
 
  
 
@@ -20,15 +21,13 @@ class PermiumAccount(serializers.ModelSerializer):
 
 class UserModelSerializer(serializers.ModelSerializer):
 
-    class Meta:
-        model = CustomUser
-        fields = ['phone',]
+
 
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     
     class Meta:
         model = CustomUser
-        fields = ['phone', 'password']
+        fields = ['phone','last_name', 'mac_address']
         
     
     def create(self, validated_data):
@@ -51,3 +50,35 @@ class UserModelLoginSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['phone', 'password']
         
+        
+        
+
+class FilterSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Filter
+        fields = '__all__'
+        
+        
+        
+class ConditionsSerializer(serializers.ModelSerializer):
+    filter = FilterSerializer
+    class Meta:
+        model = Conditions
+        fields = ['type', 'value', 'filter']
+        depth = 2
+        
+        
+        
+class RankSerializer(serializers.ModelSerializer):
+    filter = FilterSerializer
+    
+    
+    class Meta:
+        model = Rank
+        fields = ['rate', 'user', 'filter']
+        depth = 2 
+
+
+
+

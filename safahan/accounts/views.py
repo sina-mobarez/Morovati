@@ -1,20 +1,51 @@
 
 
+from xml.dom import ValidationErr
+from django.db import IntegrityError
+from django.forms import ValidationError
 from django.shortcuts import get_object_or_404
+import pyotp
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import generics, mixins
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework import status
+from rest_framework_simplejwt.tokens import AccessToken
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth import login
 
 
 
 
-from accounts.models import Conditions, Filter, Permium, Rank
-
-from .serializers import ConditionsSerializer, FilterSerializer, PermiumAccount, RankSerializer
 
 
 
+from accounts.models import Conditions, CustomUser, Filter, Permium, Rank
+
+from .serializers import ConditionsSerializer, FilterSerializer, GetCodeVerifyPhoneNumberSerializer, PermiumAccount, RankSerializer, UserModelLoginSerializer, UserModelSerializer, VerifyPhoneNumberSerializer
+
+
+
+
+from ippanel import Client
+
+# you api key that generated from panel
+api_key = "bCk-lgVEMa522x0b4ErHBT9m12Wyl1v2AAQb7WVs71Y="
+
+# create client instance
+sms = Client(api_key)
+
+def send_sms(receptor, token):
+    
+    bulk_id = sms.send(
+        "+983000505",          # originator
+        [f'98{receptor}'],    # recipients
+        f'your otp code is :  {token}' # message
+    )
+    
 
 class PermiumAccountListCreateView(ListCreateAPIView):
     queryset = Permium.objects.all()
@@ -213,3 +244,164 @@ class FilterRetrieveUpdateDelete(mixins.RetrieveModelMixin, mixins.UpdateModelMi
         return obj
     
     
+    
+    
+    
+    
+    
+    
+#-----------------------------------------otp----------------------------------
+
+
+
+class RegisterUser(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserModelSerializer
+
+    @swagger_auto_schema(request_body=UserModelSerializer,
+                         responses={400: "you have provided invalid parameters",
+                                    200: UserModelSerializer})
+    def post(self, request, *args, **kwargs):
+        
+        try:
+            data = {}
+            serializer = UserModelSerializer(data=request.data)
+            if serializer.is_valid():
+                account = serializer.save()
+                account.is_active = True
+                account.save()
+                time_otp = pyotp.TOTP(account.key, interval=300)
+                time_otp = time_otp.now()
+                
+                data["message"] = "user registered successfully, and otp is sent to your number"
+
+            else:
+                data = serializer.errors
+                return Response(
+                    {
+                        'message': data,
+                        
+                    },
+                    status= status.HTTP_400_BAD_REQUEST
+                )
+                
+            print('========== OTP:',time_otp)
+            send_sms(receptor=account.phone, token=time_otp)
+            
+            return Response(data, status=status.HTTP_201_CREATED)
+        except IntegrityError as e:
+            raise ValidationErr({"400": f'{str(e)}'})
+
+        except KeyError as e:
+            print(e)
+            raise ValidationError({"400": f'Field {str(e)} missing'})
+
+
+
+class LoginUser(APIView):
+    @swagger_auto_schema(request_body=UserModelLoginSerializer,
+                         responses={400: "account doesn't exist",
+                                    200: UserModelSerializer})
+    
+    def post(self, request,*args, **kwargs):
+        data = {}
+        
+        # serializer = UserModelLoginSerializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        # valid_data = serializer.validated_data
+              
+        username = request.data['phone']
+        password = request.data['password']
+        try:
+
+            Account = CustomUser.objects.get(phone=username)
+        except BaseException as e:
+            raise ValidationError({"400": f'{str(e)}'})
+
+        token = AccessToken.for_user(Account)
+    
+        if not check_password(password, Account.password):
+            raise ValidationError({"message": "Incorrect Login credentials"})
+        
+        if not Account.is_verified:
+            raise ValidationError({"message": "First verify your phone number"})
+
+        if Account:
+            if Account.is_active:
+                login(request, Account, backend='accounts.backends.OtpBackend')
+                data["message"] = "user logged in"
+                data["phone"] = Account.phone
+
+                Res = {"data": data, "token": str(token)}
+
+                return Response(Res, status=200)
+
+            else:
+                raise ValidationError({"400": f'Account not active'})
+
+        else:
+            raise ValidationError({"400": f'Account doesnt exist'})
+        
+        
+        
+
+class VerifyPhoneNumber(APIView):
+    @swagger_auto_schema(request_body=VerifyPhoneNumberSerializer,
+                         responses={400: "The provided code did not match or has expired",
+                                    201: "Phone number verified successfully"})
+    
+    def post(self, request,*args, **kwargs): 
+        phone = request.data['phone']
+        otp_code = request.data['otp_code']
+        try:
+
+            Account = CustomUser.objects.get(phone=phone)
+        except BaseException as e:
+            raise ValidationError({"400": f'{str(e)}'})
+
+
+        if Account:
+            if not Account.is_verified:
+                if Account.authenticate(otp_code):
+                    Account.is_verified=True
+                    Account.save()
+                    return Response(dict(detail = "Phone number verified successfully"),status=201)
+                else:
+                    return Response(dict(detail='The provided code did not match or has expired'),status=400)
+            else:
+                return Response(dict(detail='PhoneNumber verified before'),status=400)
+
+        else:
+            raise ValidationError({"400": f'Account with this phone number doesnt exist'})
+        
+        
+        
+
+class GetCodeForVerify(APIView):
+    @swagger_auto_schema(request_body=GetCodeVerifyPhoneNumberSerializer,
+                         responses={400: "Account Verified before or doesn't exist",
+                                    200: "Verification Code sent to your Number"})
+    
+    def post(self, request,*args, **kwargs): 
+        phone = request.data['phone']
+        try:
+
+            Account = CustomUser.objects.get(phone=phone)
+        except BaseException as e:
+            raise ValidationError({"400": f'{str(e)}'})
+
+
+        if Account:
+            if not Account.is_verified:
+                time_otp = pyotp.TOTP(Account.key, interval=300)
+                time_otp = time_otp.now()
+                
+                send_sms(receptor=phone, token=time_otp)
+                print('=========== otp : ', time_otp)
+                
+                return Response(dict(detail = "Verification Code sent to your Number"),status=200)
+            else:
+                return Response(dict(detail='PhoneNumber verified before'),status=400)
+
+        else:
+            raise ValidationError({"400": f'Account with this phone number doesnt exist'})

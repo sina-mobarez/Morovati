@@ -82,3 +82,19 @@ class RankSerializer(serializers.ModelSerializer):
 
 
 
+
+class VerifyPhoneNumberSerializer(serializers.ModelSerializer):
+    otp_code = serializers.CharField(required=True, max_length=6)
+    
+    class Meta:
+        model = CustomUser
+        fields = ['phone', 'otp_code']
+        
+        
+        
+        
+class GetCodeVerifyPhoneNumberSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = CustomUser
+        fields = ['phone',]

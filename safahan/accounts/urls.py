@@ -1,6 +1,5 @@
-from multiprocessing import Condition
-from unicodedata import name
-from .views import ConditionsDetailUpdateDeleteView, ConditionsListCreateView, FilterListCreateView, FilterRetrieveUpdateDelete, PermiumAccountListCreateView, PermiumAccountRetrieveUpdateDelete, RankListCreateView, RankRetrieveUpdateDelete
+
+from .views import ConditionsDetailUpdateDeleteView, ConditionsListCreateView, FilterListCreateView, FilterRetrieveUpdateDelete, GetCodeForVerify, PermiumAccountListCreateView, PermiumAccountRetrieveUpdateDelete, RankListCreateView, RankRetrieveUpdateDelete, VerifyPhoneNumber
 from django.urls import path
 
 
@@ -16,7 +15,9 @@ urlpatterns = [
     path('condition/', ConditionsListCreateView.as_view(), name="conditions"),
     path('conditions/<int:id>/', ConditionsDetailUpdateDeleteView.as_view(), name='condition'),
     path('rank/', RankListCreateView.as_view(), name='rank'),
-    path('rank/<int:id>/', RankRetrieveUpdateDelete.as_view(), name='rank')
+    path('rank/<int:id>/', RankRetrieveUpdateDelete.as_view(), name='rank'),
+    path('verify-phone-number/', VerifyPhoneNumber.as_view(), name='verify-phone-number'),
+    path('get-code-for-verify/', GetCodeForVerify.as_view(), name='get-code-for-verify'),
     
     
     

@@ -2,7 +2,7 @@ from dataclasses import field
 from multiprocessing import Condition
 from rest_framework import serializers
 
-from accounts.models import Conditions, Filter, Permium, CustomUser, Rank
+from accounts.models import Alarm, CoinScout, Conditions, Filter, Permium, CustomUser, Rank, StockScout
 from django.contrib.auth.password_validation import validate_password
 
  
@@ -98,3 +98,28 @@ class GetCodeVerifyPhoneNumberSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['phone',]
+        
+        
+        
+        
+class AlarmSerializers(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Alarm
+        fields = '__all__'
+        
+        
+        
+class StockScoutSeriallizer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = StockScout
+        fields = '__all__'
+        
+        
+
+class CoinScoutSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = CoinScout
+        fields = '__all__'

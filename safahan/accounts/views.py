@@ -3,6 +3,7 @@
 from xml.dom import ValidationErr
 from django.db import IntegrityError
 from django.forms import ValidationError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 import pyotp
 from rest_framework.generics import ListCreateAPIView
@@ -23,9 +24,9 @@ from django.contrib.auth import login
 
 
 
-from accounts.models import Conditions, CustomUser, Filter, Permium, Rank
+from accounts.models import Alarm, CoinScout, Conditions, CustomUser, Filter, Permium, Rank, StockScout
 
-from .serializers import ConditionsSerializer, FilterSerializer, GetCodeVerifyPhoneNumberSerializer, PermiumAccount, RankSerializer, UserModelLoginSerializer, UserModelSerializer, VerifyPhoneNumberSerializer
+from .serializers import AlarmSerializers, CoinScoutSerializer, ConditionsSerializer, FilterSerializer, GetCodeVerifyPhoneNumberSerializer, PermiumAccount, RankSerializer, StockScoutSeriallizer, UserModelLoginSerializer, UserModelSerializer, VerifyPhoneNumberSerializer
 
 
 
@@ -405,3 +406,91 @@ class GetCodeForVerify(APIView):
 
         else:
             raise ValidationError({"400": f'Account with this phone number doesnt exist'})
+        
+        
+        
+
+class AlarmListCreateView(ListCreateAPIView):
+    queryset = Alarm.objects.all()
+    serializer_class = AlarmSerializers
+    permission_classes=[IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        serializer.save(user=user)
+        
+        
+
+class AlarmDetailUpdateDeleteView(mixins.RetrieveModelMixin, mixins.DestroyModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = Alarm.objects.all()
+    permission_classes = (IsAuthenticated,)
+    serializer_class = AlarmSerializers
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        if self.get_object().user == request.user:
+            return self.update(request, *args, **kwargs)
+        return HttpResponse("hey bro, you can not update this becuz not your's ")
+
+    def patch(self, request, *args, **kwargs):
+        if self.get_object().user == request.user:
+            return self.partial_update(request, *args, **kwargs)
+        return HttpResponse("hey bro, you can not patch on this becuz not your's ")
+    
+    def delete(self, request, *args, **kwargs):
+        if self.get_object().user == request.user:
+            return self.destroy(request, *args, **kwargs)
+        return HttpResponse("hey bro, you can not delete this becuz not your's ")
+    
+    
+    
+    
+class StockScoutDetailUpdateDeleteView(mixins.RetrieveModelMixin, mixins.DestroyModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = StockScout.objects.all()
+    permission_classes = (IsAuthenticated,)
+    serializer_class = StockScoutSeriallizer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        if self.get_object().user == request.user:
+            return self.update(request, *args, **kwargs)
+        return HttpResponse("hey bro, you can not update this becuz not your's ")
+
+    def patch(self, request, *args, **kwargs):
+        if self.get_object().user == request.user:
+            return self.partial_update(request, *args, **kwargs)
+        return HttpResponse("hey bro, you can not patch on this becuz not your's ")
+    
+    def delete(self, request, *args, **kwargs):
+        if self.get_object().user == request.user:
+            return self.destroy(request, *args, **kwargs)
+        return HttpResponse("hey bro, you can not delete this becuz not your's ")
+    
+    
+    
+class CoinScoutDetailUpdateDeleteView(mixins.RetrieveModelMixin, mixins.DestroyModelMixin, mixins.UpdateModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+    queryset = CoinScout.objects.all()
+    permission_classes = (IsAuthenticated,)
+    serializer_class = CoinScoutSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        if self.get_object().user == request.user:
+            return self.update(request, *args, **kwargs)
+        return HttpResponse("hey bro, you can not update this becuz not your's ")
+
+    def patch(self, request, *args, **kwargs):
+        if self.get_object().user == request.user:
+            return self.partial_update(request, *args, **kwargs)
+        return HttpResponse("hey bro, you can not patch on this becuz not your's ")
+    
+    def delete(self, request, *args, **kwargs):
+        if self.get_object().user == request.user:
+            return self.destroy(request, *args, **kwargs)
+        return HttpResponse("hey bro, you can not delete this becuz not your's ")

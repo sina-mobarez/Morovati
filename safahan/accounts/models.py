@@ -101,6 +101,7 @@ class Filter(models.Model):
     price = models.PositiveIntegerField("price of a filter")
     user = models.ForeignKey(CustomUser, verbose_name="user", on_delete=models.CASCADE)
     rank = models.CharField("rank of filter", max_length=3, null=True, blank=True)
+    active = models.BooleanField("boolean field")
     
     
     def save(self, *args, **kwargs):
@@ -133,4 +134,38 @@ class Rank(models.Model):
     def __str__(self):
         return f'{self.user.rate} , {self.user}'    
 
+
+
+    
+class Alarm(models.Model):
+    name = models.CharField("name of alarm", max_length=50)
+    instanceCode = models.CharField("instance code", max_length=100)
+    type = models.IntegerField("type of alarm")
+    valueType = models.CharField("type for value", max_length=50)
+    value = models.CharField("value", max_length=50)
+    active = models.BooleanField("boolean field")
+    user = models.ForeignKey(CustomUser, verbose_name="what user give this", on_delete=models.CASCADE)
+    
+    
+
+class StockScout(models.Model):
+    name = models.CharField("name of stock", max_length=50)
+    instanceCode = models.CharField("code for instance", max_length=100)
+    user = models.ForeignKey(CustomUser, verbose_name="what user give this", on_delete=models.CASCADE) 
+    
+    
+    
+    
+class CoinScout(models.Model):
+    name = models.CharField("name", max_length=50)
+    user = models.ForeignKey(CustomUser, verbose_name="what user give this", on_delete=models.CASCADE)
+    
+    
+    
+    
+
+
+    
+    
+    
     

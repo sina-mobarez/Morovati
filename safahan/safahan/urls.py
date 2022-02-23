@@ -42,4 +42,6 @@ urlpatterns = [
     path('api/v1/', include('accounts.urls')),
     re_path(r'^auth/', include('djoser.urls')),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.jwt')),
 ]

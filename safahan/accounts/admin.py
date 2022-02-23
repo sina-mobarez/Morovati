@@ -5,7 +5,7 @@ User = get_user_model()
 
 
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Permium, CustomUser
+from .models import Alarm, CoinScout, Conditions, Filter, Permium, CustomUser, Rank, StockScout
 
 
 
@@ -44,6 +44,16 @@ class PermiumAdmin(admin.ModelAdmin):
 
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Permium, PermiumAdmin)
+admin.site.register(Filter)
+
+admin.site.register(Conditions)
+admin.site.register(Rank)
+
+admin.site.register(Alarm)
+
+admin.site.register(StockScout)
+
+admin.site.register(CoinScout)
 
 
 

@@ -1,6 +1,6 @@
-from dataclasses import field
-from multiprocessing import Condition
+
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from accounts.models import Alarm, CoinScout, Conditions, Filter, Permium, CustomUser, Rank, StockScout
 from django.contrib.auth.password_validation import validate_password
@@ -21,18 +21,23 @@ class PermiumAccount(serializers.ModelSerializer):
 
 class UserModelSerializer(serializers.ModelSerializer):
 
-
-
+    
+    email = serializers.EmailField(
+            required=True,
+            validators=[UniqueValidator(queryset=CustomUser.objects.all())]
+            )
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     
     class Meta:
         model = CustomUser
-        fields = ['phone','last_name', 'mac_address']
+        fields = ['email', 'phone','username', 'password', 'mac_address', 'last_name']
         
     
     def create(self, validated_data):
         user = CustomUser.objects.create(
             phone=validated_data['phone'],
+            email=validated_data['email'],
+            username=validated_data['username']
         )
 
         

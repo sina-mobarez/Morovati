@@ -1,5 +1,5 @@
 
-from .views import AlarmDetailUpdateDeleteView, AlarmListCreateView, CoinScoutDetailUpdateDeleteView, ConditionsDetailUpdateDeleteView, ConditionsListCreateView, FilterListCreateView, FilterRetrieveUpdateDelete, GetCodeForVerify, PermiumAccountListCreateView, PermiumAccountRetrieveUpdateDelete, RankListCreateView, RankRetrieveUpdateDelete, StockScoutDetailUpdateDeleteView, VerifyPhoneNumber
+from .views import AlarmDetailUpdateDeleteView, AlarmListCreateView, CoinScoutDetailUpdateDeleteView, ConditionsDetailUpdateDeleteView, ConditionsListCreateView, FilterListCreateView, FilterRetrieveUpdateDelete, GetCodeForVerify, LoginUser, PermiumAccountListCreateView, PermiumAccountRetrieveUpdateDelete, RankListCreateView, RankRetrieveUpdateDelete, RegisterUser, StockScoutDetailUpdateDeleteView, VerifyPhoneNumber
 from django.urls import path
 
 
@@ -21,7 +21,9 @@ urlpatterns = [
     path('alarm/', AlarmListCreateView.as_view(), name='alarm'),
     path('alarm/<int:pk>', AlarmDetailUpdateDeleteView.as_view(), name='alarm-detail'),
     path('stock-scout/', StockScoutDetailUpdateDeleteView.as_view(), name='stock'),
-    path('coin/', CoinScoutDetailUpdateDeleteView.as_view(), name='coin')
+    path('coin/', CoinScoutDetailUpdateDeleteView.as_view(), name='coin'),
+    path('register/', RegisterUser.as_view(), name='register'),
+    # path('login/', LoginUser.as_view(), name='login')
     
     
     

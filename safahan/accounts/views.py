@@ -275,6 +275,8 @@ class RegisterUser(APIView):
                 time_otp = time_otp.now()
                 
                 data["message"] = "user registered successfully, and otp is sent to your number"
+                data["email"] = account.email
+                data["username"] = account.username
 
             else:
                 data = serializer.errors
@@ -291,7 +293,9 @@ class RegisterUser(APIView):
             
             return Response(data, status=status.HTTP_201_CREATED)
         except IntegrityError as e:
-            raise ValidationErr({"400": f'{str(e)}'})
+            account=CustomUser.objects.get(username='')
+            account.delete()
+            raise ValidationError({"400": f'{str(e)}'})
 
         except KeyError as e:
             print(e)
@@ -311,11 +315,11 @@ class LoginUser(APIView):
         # serializer.is_valid(raise_exception=True)
         # valid_data = serializer.validated_data
               
-        username = request.data['phone']
+        username = request.data['username']
         password = request.data['password']
         try:
 
-            Account = CustomUser.objects.get(phone=username)
+            Account = CustomUser.objects.get(Q(username__iexact=username) | Q(email__iexact=username) | Q(phone__iexact=username))
         except BaseException as e:
             raise ValidationError({"400": f'{str(e)}'})
 
@@ -331,7 +335,7 @@ class LoginUser(APIView):
             if Account.is_active:
                 login(request, Account, backend='accounts.backends.OtpBackend')
                 data["message"] = "user logged in"
-                data["phone"] = Account.phone
+                data["email"] = Account.email
 
                 Res = {"data": data, "token": str(token)}
 
@@ -342,6 +346,9 @@ class LoginUser(APIView):
 
         else:
             raise ValidationError({"400": f'Account doesnt exist'})
+        
+        
+        
         
         
         

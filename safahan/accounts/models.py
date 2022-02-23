@@ -10,18 +10,21 @@ import pyotp
 
 class UserManager(BaseUserManager):
    
-    def create_user(self,phone, password, **extra_fields):
+    def create_user(self, username, email, phone, password, **extra_fields):
         """
         Create and save a User with the given email, phone number and password.
         """
+        if not email:
+            raise ValueError('The Email must be set')
         if not phone:
             raise ValueError('The Phone must be set')
-        user = self.model(phone=phone, **extra_fields)
+        email = self.normalize_email(email)
+        user = self.model(email=email, phone=phone, username=username, **extra_fields)
         user.set_password(password)
         user.save()
         return user
 
-    def create_superuser(self, phone, password, **extra_fields):
+    def create_superuser(self, username, email, phone, password, **extra_fields):
         """
         Create and save a SuperUser with the given email, phone number and password.
         """
@@ -35,9 +38,7 @@ class UserManager(BaseUserManager):
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self.create_user(phone, password, **extra_fields)
-
-
+        return self.create_user(username, email, phone, password, **extra_fields)
 
 
 
@@ -47,9 +48,10 @@ class CustomUser(AbstractUser):
     phone = models.CharField('Phone number',validators =[phone_regex], max_length=14, unique=True,null=True)
     is_verified = models.BooleanField('verified', default=False, help_text='Designates whether this user has verified phone')
     key = models.CharField(max_length=100, unique=True, blank=True)
-    mac_address = models.CharField("a unique address of every device", max_length=120)
-    last_name = models.CharField("family name", max_length=32)
-    USERNAME_FIELD = 'phone'
+    email = models.EmailField('email address', unique=True)
+    mac_address = models.CharField("a unique address of every device", max_length=120, null=True, blank=True)
+    last_name = models.CharField("family name", max_length=32, null=True, blank=True)
+    REQUIRED_FIELDS = ['email', 'phone']
 
 
     objects = UserManager()  
@@ -146,13 +148,19 @@ class Alarm(models.Model):
     active = models.BooleanField("boolean field")
     user = models.ForeignKey(CustomUser, verbose_name="what user give this", on_delete=models.CASCADE)
     
+    def __str__(self):
+        return f'{self.user.name} , {self.user}' 
+    
+    
     
 
 class StockScout(models.Model):
     name = models.CharField("name of stock", max_length=50)
     instanceCode = models.CharField("code for instance", max_length=100)
     user = models.ForeignKey(CustomUser, verbose_name="what user give this", on_delete=models.CASCADE) 
-    
+
+    def __str__(self):
+        return f'{self.user.name} , {self.user}' 
     
     
     
@@ -162,9 +170,8 @@ class CoinScout(models.Model):
     
     
     
-    
-
-
+    def __str__(self):
+        return f'{self.user.name} , {self.user}' 
     
     
     
